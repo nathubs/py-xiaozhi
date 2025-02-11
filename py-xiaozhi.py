@@ -117,9 +117,9 @@ def send_audio():
     mic = audio.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=960)
     try:
         while True:
-            if listen_state == "stop":
-                continue
+            if listen_state == "stop":                
                 time.sleep(0.1)
+                continue                
             # 读取音频数据
             data = mic.read(960)
             # 编码音频数据
@@ -132,7 +132,7 @@ def send_audio():
             # 加密数据，添加nonce
             encrypt_encoded_data = aes_ctr_encrypt(bytes.fromhex(key), bytes.fromhex(new_nonce), bytes(encoded_data))
             data = bytes.fromhex(new_nonce) + encrypt_encoded_data
-            sent = udp_socket.sendto(data, (server_ip, server_port))
+            sent = udp_socket.sendto(data, (server_ip, server_port))            
     except Exception as e:
         print(f"send audio err: {e}")
     finally:
@@ -302,16 +302,18 @@ def on_space_key_press(event):
         # 发送start listen消息
         msg = {"session_id": aes_opus_info['session_id'], "type": "listen", "state": "start", "mode": "manual"}
         print(f"send start listen message: {msg}")
+        listen_state = "start"
         push_mqtt_msg(msg)
 
 
 def on_space_key_release(event):
-    global aes_opus_info, key_state
+    global aes_opus_info, key_state,listen_state
     key_state = "release"
     # 发送stop listen消息
     if aes_opus_info['session_id'] is not None:
         msg = {"session_id": aes_opus_info['session_id'], "type": "listen", "state": "stop"}
         print(f"send stop listen message: {msg}")
+        listen_state = "stop"
         push_mqtt_msg(msg)
 
 
